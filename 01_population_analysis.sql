@@ -1,6 +1,6 @@
 -- =====================================
 -- Project: EHR SQL Analysis
--- Author: Zhaoyi Chen
+-- Author: Joey
 -- Module: Population Analysis
 -- Database: Synthea EHR (PostgreSQL)
 -- =====================================
