@@ -1,0 +1,54 @@
+-- =====================================
+-- Project: EHR SQL Analysis
+-- Author: Zhaoyi Chen
+-- Module: Utilization Analysis (Day 2)
+-- Tables used: encounters
+-- Database: PostgreSQL (Synthea EHR)
+-- =====================================
+
+-- 1) Visits by encounter type (total encounter count)
+SELECT
+    encounter_class,
+    COUNT(*) AS visit_count
+FROM encounters
+GROUP BY encounter_class
+ORDER BY visit_count DESC;
+
+
+-- 2) Unique patients by encounter type
+SELECT
+    encounter_class,
+    COUNT(DISTINCT patient_id) AS patient_count
+FROM encounters
+GROUP BY encounter_class
+ORDER BY patient_count DESC;
+
+
+-- 3) Total visits per patient (all encounter types)
+SELECT
+    patient_id,
+    COUNT(*) AS visit_count
+FROM encounters
+GROUP BY patient_id
+ORDER BY visit_count DESC;
+
+
+-- 4) Top 20 high-utilization patients (all encounter types)
+SELECT
+    patient_id,
+    COUNT(*) AS visit_count
+FROM encounters
+GROUP BY patient_id
+ORDER BY visit_count DESC
+LIMIT 20;
+
+
+-- 5) Top 20 high-utilization INPATIENT patients
+SELECT
+    patient_id,
+    COUNT(*) AS inpatient_visit_count
+FROM encounters
+WHERE encounter_class = 'inpatient'
+GROUP BY patient_id
+ORDER BY inpatient_visit_count DESC
+LIMIT 20;
