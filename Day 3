@@ -1,0 +1,107 @@
+/* ============================================================
+Level 1 – Population Reporting (Hospital Standard)
+Tables: patients
+Database: PostgreSQL
+============================================================ */
+
+/* ------------------------------------------------------------
+1) Total Patients
+Definition: total rows in patients table
+------------------------------------------------------------ */
+SELECT COUNT(*) AS total_patients
+FROM patients;
+
+
+/* ------------------------------------------------------------
+2) Gender Distribution (count + % of total)
+Definition: patients grouped by gender
+------------------------------------------------------------ */
+SELECT 
+    COALESCE(gender, 'Unknown') AS gender,
+    COUNT(*) AS patient_count,
+    SUM(COUNT(*)) OVER() AS total_patients,
+    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 2) AS pct_of_total
+FROM patients
+GROUP BY COALESCE(gender, 'Unknown')
+ORDER BY patient_count DESC;
+
+
+/* ------------------------------------------------------------
+3) Average Age (years)
+Definition: average age among patients with non-null birth_date
+Note: uses AGE() for accuracy
+------------------------------------------------------------ */
+SELECT 
+    COUNT(*) AS patient_count,
+    ROUND(
+        AVG(
+            DATE_PART('year', AGE(CURRENT_DATE, birth_date))
+        )::numeric,
+        1
+    ) AS avg_age_years
+FROM patients
+WHERE birth_date IS NOT NULL;
+
+/* ------------------------------------------------------------
+4) Age Segmentation (counts)
+Definition: age bands using accurate age
+Includes: Unknown group for null birth_date
+------------------------------------------------------------ */
+WITH patient_age AS (
+    SELECT
+        CASE 
+            WHEN birth_date IS NULL THEN NULL
+            ELSE DATE_PART('year', AGE(CURRENT_DATE, birth_date))
+        END AS age_years
+    FROM patients
+),
+age_bands AS (
+    SELECT
+        CASE
+            WHEN age_years IS NULL THEN 'Unknown'
+            WHEN age_years < 18 THEN '0-17'
+            WHEN age_years BETWEEN 18 AND 39 THEN '18-39'
+            WHEN age_years BETWEEN 40 AND 64 THEN '40-64'
+            ELSE '65+'
+        END AS age_group
+    FROM patient_age
+)
+SELECT
+    age_group,
+    COUNT(*) AS patient_count
+FROM age_bands
+GROUP BY age_group
+ORDER BY age_group;
+
+
+/* ------------------------------------------------------------
+5) Age Segmentation (counts + total + %)
+Definition: same age bands, add total and pct for dashboard
+------------------------------------------------------------ */
+WITH patient_age AS (
+    SELECT
+        CASE 
+            WHEN birth_date IS NULL THEN NULL
+            ELSE DATE_PART('year', AGE(CURRENT_DATE, birth_date))
+        END AS age_years
+    FROM patients
+),
+age_bands AS (
+    SELECT
+        CASE
+            WHEN age_years IS NULL THEN 'Unknown'
+            WHEN age_years < 18 THEN '0-17'
+            WHEN age_years BETWEEN 18 AND 39 THEN '18-39'
+            WHEN age_years BETWEEN 40 AND 64 THEN '40-64'
+            ELSE '65+'
+        END AS age_group
+    FROM patient_age
+)
+SELECT
+    age_group,
+    COUNT(*) AS patient_count,
+    SUM(COUNT(*)) OVER() AS total_patients,
+    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 2) AS pct_of_total
+FROM age_bands
+GROUP BY age_group
+ORDER BY age_group;
