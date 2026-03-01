@@ -1,0 +1,315 @@
+🏥 Hospital EHR Database Cleanup & Normalization (PostgreSQL)
+1. Project Overview
+
+This project transforms raw Synthea-generated EHR data into a production-ready, analytics-oriented PostgreSQL schema.
+
+The original dataset contained:
+
+Inconsistent data types (extensive use of varchar and float)
+
+Uppercase column names requiring quoted identifiers
+
+Missing primary keys
+
+No foreign key constraints
+
+No indexing strategy
+
+The goal was to redesign the schema to meet real-world hospital analytics standards.
+
+2. Data Modeling & Governance Principles
+2.1 UUID Standardization
+
+All identifier columns were converted to PostgreSQL native uuid type:
+
+patients.id
+
+encounters.id
+
+providers.id
+
+organizations.id
+
+All related foreign keys (patient_id, encounter_id, provider_id, etc.)
+
+Why UUID?
+
+128-bit globally unique identifier
+
+Type-safe
+
+Smaller storage (16 bytes vs 36-char string)
+
+Efficient indexing
+
+Production-grade distributed system compatibility
+
+2.2 Strong Typing for Date & Time
+
+Clinical timestamps → timestamptz
+
+Birth and death dates → date
+
+Observation timestamps → timestamptz
+
+This ensures:
+
+Time zone safety
+
+Accurate duration calculations (e.g., LOS)
+
+Reliable cohort construction
+
+2.3 Financial Columns Converted to Numeric
+
+All monetary fields were converted from float4/real to:
+
+numeric(12,2)
+
+Examples:
+
+base_encounter_cost
+
+total_claim_cost
+
+payer_coverage
+
+revenue
+
+Reason: Floating point types introduce rounding errors and are not acceptable for financial calculations.
+
+2.4 Column Naming Standardization
+
+All column names were converted to lowercase to eliminate quoted identifiers:
+
+Example:
+
+"DATE" → obs_time
+
+"PATIENT" → patient_id
+
+"ENCOUNTER" → encounter_id
+
+This improves SQL readability and prevents case-sensitivity issues.
+
+3. Schema Improvements by Table
+3.1 patients
+
+id → uuid (Primary Key)
+
+birthdate, deathdate → date
+
+zip → varchar(10)
+
+lat/lon → numeric(9,6)
+
+Healthcare cost columns → numeric(12,2)
+
+3.2 encounters (Core Fact Table)
+
+Central fact table in the model.
+
+id → uuid (Primary Key)
+
+patient_id, organization_id, provider_id, payer_id → uuid
+
+start_time, stop_time → timestamptz
+
+Financial columns → numeric(12,2)
+
+Foreign Keys:
+
+patient_id → patients.id
+
+organization_id → organizations.id
+
+provider_id → providers.id
+
+Indexes:
+
+patient_id
+
+start_time
+
+organization_id
+
+provider_id
+
+3.3 conditions
+
+Added condition_id bigserial as Primary Key
+
+patient_id, encounter_id → uuid
+
+start_time, stop_time → timestamptz
+
+Foreign Keys:
+
+patient_id → patients.id
+
+encounter_id → encounters.id
+
+Indexes:
+
+patient_id
+
+encounter_id
+
+start_time
+
+3.4 procedures
+
+Standardized column names
+
+date → timestamptz
+
+base_cost → numeric(12,2)
+
+Added procedure_id bigserial as Primary Key
+
+Foreign Keys:
+
+patient_id → patients.id
+
+encounter_id → encounters.id
+
+3.5 medications
+
+start_time, stop_time → timestamptz
+
+base_cost, payer_coverage, total_cost → numeric(12,2)
+
+Added medication_id bigserial as Primary Key
+
+Foreign Keys:
+
+patient_id → patients.id
+
+encounter_id → encounters.id
+
+3.6 observations
+
+Renamed columns to standardized format
+
+obs_time → timestamptz
+
+patient_id, encounter_id → uuid
+
+Added observation_id bigserial as Primary Key
+
+value intentionally preserved as varchar (mixed numeric/text values)
+
+Foreign Keys:
+
+patient_id → patients.id
+
+encounter_id → encounters.id
+
+Indexes:
+
+patient_id
+
+encounter_id
+
+obs_time
+
+3.7 organizations
+
+id → uuid (Primary Key)
+
+lat/lon → numeric(9,6)
+
+revenue → numeric(12,2)
+
+utilization → integer
+
+Referenced by:
+
+encounters.organization_id
+
+providers.organization_id
+
+3.8 providers
+
+id → uuid (Primary Key)
+
+organization_id → uuid
+
+lat/lon → numeric(9,6)
+
+Foreign Keys:
+
+organization_id → organizations.id
+
+encounters.provider_id → providers.id
+
+4. Referential Integrity Validation
+
+Before adding foreign keys, orphan checks were performed:
+
+SELECT COUNT(*)
+FROM encounters e
+LEFT JOIN patients p ON e.patient_id = p.id
+WHERE p.id IS NULL;
+
+All constraints were validated before enforcement.
+
+5. Index Verification
+
+Query plans were validated using:
+
+EXPLAIN ANALYZE
+SELECT *
+FROM ehr.conditions
+WHERE patient_id = 'some_uuid';
+
+Confirmed:
+
+Bitmap Index Scan
+
+Index Scan
+
+Reduced execution time
+
+6. Final Architecture
+
+The resulting model follows a clean fact-centered structure:
+
+patients
+    ↓
+encounters
+    ↓
+conditions
+procedures
+medications
+observations
+
+With supporting dimension tables:
+
+organizations
+
+providers
+
+This structure supports:
+
+Volume analysis
+
+Length of stay (LOS)
+
+Readmission rate
+
+Revenue analysis
+
+Provider utilization
+
+Cohort construction
+
+7. Backup & Reproducibility
+
+The schema was exported using:
+
+Full backup (structure + data)
+
+Schema-only backup for version control
+
+This ensures reproducibility and safe experimentation.
