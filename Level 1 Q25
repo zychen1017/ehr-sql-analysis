@@ -1,0 +1,118 @@
+🏥 Level 1 – Hospital Core SQL Training (25 Questions)
+Objective
+
+This module covers 70–80% of real-world hospital data analyst responsibilities.
+
+Focus areas:
+
+Time-based aggregation
+
+KPI calculation
+
+Ratio metrics
+
+DISTINCT counts
+
+Basic JOINs
+
+Financial summaries
+
+Operational reporting
+
+Clinical activity analysis
+
+These 25 exercises simulate real hospital analytics tasks.
+
+🔹 Module 1 – Volume & Utilization (Operational KPIs)
+
+Total encounters per year.
+
+Monthly total encounter volume (2015–2020 trend).
+
+Monthly inpatient encounter count.
+
+Monthly inpatient ratio (inpatient encounters / total encounters).
+
+Encounter distribution by encounter_class.
+
+Monthly encounter volume by organization.
+
+Monthly encounter volume by provider.
+
+Annual visit frequency distribution per patient (identify heavy users).
+
+🔹 Module 2 – Patient Metrics
+
+Annual distinct patient count.
+
+Monthly distinct patient count.
+
+Average annual visits per patient.
+
+Patient gender distribution.
+
+Patient age distribution by age group (e.g., 0–17, 18–34, 35–49, 50–64, 65+).
+
+🔹 Module 3 – Inpatient Analytics
+
+Average Length of Stay (LOS) for inpatient encounters.
+
+Monthly average LOS trend.
+
+Average age of inpatient patients.
+
+Average LOS by organization.
+
+🔹 Module 4 – Financial KPIs
+
+Monthly total revenue (SUM of total_claim_cost).
+
+Monthly average revenue per encounter.
+
+Annual revenue by organization.
+
+Average encounter cost by encounter_class.
+
+🔹 Module 5 – Clinical Activity Analysis
+
+Top 10 most frequent diagnoses (conditions).
+
+Monthly count of new diagnoses.
+
+Top 10 most frequent procedures.
+
+Top 10 most prescribed medications.
+
+Skills Covered in Level 1
+
+GROUP BY and aggregation
+
+Date and time handling (date_trunc, extract)
+
+COUNT(DISTINCT)
+
+KPI numerator/denominator logic
+
+Basic joins
+
+Financial aggregation
+
+Operational reporting logic
+
+Clinical frequency analysis
+
+Outcome After Level 1
+
+After completing these 25 exercises, you should be able to:
+
+Build hospital operational reports
+
+Calculate inpatient metrics
+
+Produce financial summaries
+
+Analyze provider workload
+
+Support executive dashboard reporting
+
+Write production-grade SQL for healthcare analytics
